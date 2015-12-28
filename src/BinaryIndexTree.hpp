@@ -13,6 +13,8 @@
 template <typename T, typename Weight = std::size_t>
 class BinaryIndexTree{
 
+    static_assert(std::is_unsigned<Weight>::value,"Weight (the second template argument) must be an unsigned integral type");
+
     public: class const_iterator;
 private:
     struct size_struct{
@@ -59,10 +61,12 @@ private:
         }
 
         Node(Node && node){
-            value = node.value;
+            value = std::move(node.value);
             weight = node.weight;
             child[0] = node.child[0];
             child[1] = node.child[1];
+            node.child[0] = nullptr;
+            node.child[1] = nullptr;
         }
 
         ~Node(){
@@ -363,15 +367,11 @@ public:
     public:
         const_iterator(BinaryIndexTree const& tree, size_struct index){
             root = tree.m_root;
-            if((Weight)index){
-                if((Weight)index >= root->weight){
-                    current = nullptr;
-                } else{
-                    current = tree.m_root;
+            current = root;
+            if(root){
+                if(root->weight>(Weight)index){
                     if(current) crawldown((Weight)index);
                 }
-            } else{
-                current = nullptr;
             }
         }
 
@@ -750,20 +750,27 @@ public:
         return iterator(*this,(Weight)position);
     }
 
-    bool insertAt(size_struct i, T const& value){
+    void insertAt(size_struct i, T const& value){
         Weight index = (Weight)i;
         if(0<=index && index<=size()){
             insert(index,value);
-            return true;
-        } else return false;
+        } else throw std::out_of_range("Index out of range at insertAt.");
     }
 
     void push_back(T const& value){
         insert(size(),value);
     }
 
+    void push_back(T && value){
+        insert(size(),std::move(value));
+    }
+
     void push_front(T const& value){
         insert(0,value);
+    }
+
+    void push_front(T && value){
+        insert(0,std::move(value));
     }
 
     template<typename ... Args>
@@ -774,12 +781,11 @@ public:
     }
 
     template<typename ... Args>
-    bool emplaceAt(size_struct i,Args&&... args){
+    void emplaceAt(size_struct i,Args&&... args){
         Weight index = (Weight)i;
         if(0<=index && index<=size()){
             emplace(index,std::forward<Args...>(args...));
-            return true;
-        } else return false;
+        } else throw std::out_of_range("Index out of bounds at emplaceAt");
     }
 
     template<typename ... Args>
@@ -831,7 +837,7 @@ public:
         Weight index = (Weight)i;
         if(0<=index && index<size()){
             return pop(index);
-        } else throw std::out_of_range("Index out of bounds");
+        } else throw std::out_of_range("Index out of bounds at popAt");
     }
 
     iterator erase(size_struct index){
