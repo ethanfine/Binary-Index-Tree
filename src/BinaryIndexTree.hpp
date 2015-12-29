@@ -16,6 +16,7 @@ class BinaryIndexTree{
     static_assert(std::is_unsigned<Weight>::value,"Weight (the second template argument) must be an unsigned integral type");
 
     public: class const_iterator;
+            class iterator;
 private:
     struct size_struct{
         Weight value;
@@ -365,6 +366,11 @@ public:
         }
 
     public:
+        const_iterator(){
+            root = nullptr;
+            current = nullptr;
+        }
+
         const_iterator(BinaryIndexTree const& tree, size_struct index){
             root = tree.m_root;
             current = root;
@@ -379,6 +385,14 @@ public:
             current = nullptr;
             root = tree.m_root;
         }
+
+        const_iterator(const_iterator const&) = default;
+
+        const_iterator(const_iterator &&) = default;
+
+        const_iterator& operator= (const_iterator const&) = default;
+
+        const_iterator& operator= (const_iterator &&) = default;
 
         Weight index() const{
             if(current==nullptr) return root?root->weight:0;
@@ -503,6 +517,10 @@ public:
             return index();
         }
 
+        explicit operator iterator() {
+            return *(iterator*)this;
+        }
+
         friend const_iterator operator+(ptrdiff_t const lhs, const_iterator const& rhs){
             return rhs+lhs;
         }
@@ -511,11 +529,21 @@ public:
     class iterator : public const_iterator{
     private:
     public:
-        iterator(BinaryIndexTree& tree, size_struct index): const_iterator(tree,index){}
+        template<typename... Args> explicit iterator(Args&&... args): const_iterator(std::forward<Args>(args)...){}
 
-        iterator(BinaryIndexTree& tree): const_iterator(tree){}
+        /*iterator(const_iterator const&) = delete;
 
-        iterator(const_iterator&& ci): const_iterator(ci){}
+        iterator(const_iterator &) = delete;
+
+        iterator(const_iterator &&) = delete;*/
+
+        iterator(iterator const&) = default;
+
+        iterator(iterator &&) = default;
+
+        iterator& operator= (iterator const&) = default;
+
+        iterator& operator= (iterator &&) = default;
 
         bool operator==(iterator const& other) const{
             return (const_iterator)*this == other;
