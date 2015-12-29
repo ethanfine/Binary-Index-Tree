@@ -505,11 +505,11 @@ public:
             return *this-=1;
         }
 
-        T const& operator[](ptrdiff_t index){
+        T const& operator[](ptrdiff_t index) const{
             return *(*this + index);
         }
 
-        T const* operator->(){
+        T const* operator->() const{
             return current;
         }
 
@@ -517,7 +517,7 @@ public:
             return index();
         }
 
-        explicit operator iterator() {
+        explicit operator iterator() const{
             return *(iterator*)this;
         }
 
@@ -529,13 +529,8 @@ public:
     class iterator : public const_iterator{
     private:
     public:
+        //passes arguments to const_iterator constructor
         template<typename... Args> explicit iterator(Args&&... args): const_iterator(std::forward<Args>(args)...){}
-
-        /*iterator(const_iterator const&) = delete;
-
-        iterator(const_iterator &) = delete;
-
-        iterator(const_iterator &&) = delete;*/
 
         iterator(iterator const&) = default;
 
@@ -597,11 +592,11 @@ public:
             return *this-=1;
         }
 
-        T& operator[](ptrdiff_t index){
+        T& operator[](ptrdiff_t index) const{
             return *(*this + index);
         }
 
-        T* operator->(){
+        T* operator->() const{
             return const_iterator::operator->();
         }
 
@@ -685,7 +680,7 @@ public:
     }
 
     //allows container to act like vector in generic code.
-    std::size_t capacity(){
+    std::size_t capacity() const{
         return size() * 2;
     }
 
